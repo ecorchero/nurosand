@@ -33,7 +33,10 @@ function refreshBrowserVoice() {
 }
 
 export function canSpeak(): boolean {
-  return typeof window !== "undefined" && ("speechSynthesis" in window || !!window.Audio);
+  return (
+    typeof window !== "undefined" &&
+    (typeof window.speechSynthesis !== "undefined" || typeof window.Audio !== "undefined")
+  );
 }
 
 export async function warmVoices(): Promise<{ name: string } | null> {
@@ -133,7 +136,7 @@ async function speakEleven(text: string, seq: number) {
   await audio.play();
 }
 
-export function speak(text: string, _opts?: { rate?: number; pitch?: number }) {
+export function speak(text: string) {
   if (!text || typeof window === "undefined") return;
   const seq = ++speakSeq;
   stopBrowser();

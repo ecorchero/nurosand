@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f7f7f5;
+  --foreground: #1c1c1a;
+  --muted: #5f5e5a;
+  --border: #dddcd6;
+  --surface: #ffffff;
+  --accent: #1f6b63;
+  --accent-soft: #eef6f4;
+  --accent-hover: #18574f;
+  --danger: #9b2c2c;
+  --danger-soft: #fdf2f2;
+  --success: #276749;
+  --success-soft: #f0fff4;
+  --track: #e6e5df;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  min-height: 100vh;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 17px;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+}
+
+.shell {
+  @apply mx-auto max-w-2xl px-5 py-10 sm:px-6 sm:py-14;
+}
+
+.topbar {
+  @apply mb-10 flex items-center justify-between;
+}
+
+.card {
+  @apply rounded-md border bg-white p-5;
+  border-color: var(--border);
+}
+
+.card-soft {
+  @apply rounded-md border p-4;
+  border-color: var(--border);
+  background: var(--accent-soft);
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded px-4 py-2.5 text-[15px] font-bold transition disabled:opacity-40;
+}
+.btn-primary {
+  @apply btn text-white;
+  background: var(--accent);
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+.btn-ghost {
+  @apply btn border bg-white font-normal;
+  border-color: var(--border);
+  color: var(--foreground);
+}
+.btn-ghost:hover {
+  background: var(--background);
+}
+.tag {
+  @apply inline-flex items-center rounded border px-2 py-0.5 text-sm capitalize;
+  border-color: var(--border);
+  background: var(--background);
+  color: var(--muted);
+}
+.tag-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.input {
+  @apply w-full rounded border bg-white px-3 py-2.5 outline-none;
+  border-color: var(--border);
+  color: var(--foreground);
+  font-size: 16px;
+}
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(31, 107, 99, 0.18);
+}
+.label {
+  @apply mb-1.5 block text-sm;
+  color: var(--muted);
+}
+.muted {
+  color: var(--muted);
+}
+.nav-back {
+  @apply text-sm;
+  color: var(--muted);
+}
+.nav-back:hover {
+  color: var(--foreground);
+}
+.page-title {
+  margin-top: 0.35rem;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(1.85rem, 4vw, 2.35rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+.section-title {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.alert-error {
+  @apply card mt-6;
+  border-color: #f0c2c2;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.alert-success {
+  @apply mt-3 rounded border px-3 py-2 text-sm;
+  border-color: #9ae6b4;
+  background: var(--success-soft);
+  color: var(--success);
+}
+.metric {
+  @apply rounded border p-3;
+  border-color: var(--border);
+  background: var(--background);
+}
+.progress-track {
+  @apply h-1.5 overflow-hidden rounded-sm;
+  background: var(--track);
+}
+.progress-fill {
+  @apply h-full rounded-sm transition-all;
+  background: var(--accent);
+}
+.badge-draft {
+  @apply tag;
+}
+.badge-signed {
+  @apply tag;
+  border-color: #9ae6b4;
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.role-link {
+  display: block;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+}
+.role-link:first-of-type {
+  border-top: 1px solid var(--border);
+}
+.role-link:hover .role-link-title {
+  color: var(--accent);
+}
+.role-link-title {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}

@@ -64,6 +64,11 @@ class PatientCreateIn(BaseModel):
     doctor_id: Optional[str] = None
 
 
+class PatientUpdateIn(BaseModel):
+    name: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class EnvironmentIn(BaseModel):
     media_url: str = ""
     tags: List[str] = []
@@ -106,6 +111,16 @@ class TtsIn(BaseModel):
     text: str
 
 
+class DeviceIn(BaseModel):
+    connected: bool
+    name: str = ""
+
+
+class PatientLoginIn(BaseModel):
+    name: str
+    password: str
+
+
 # ---------- helpers ----------
 def _patient_payload(db, user: User) -> Dict[str, Any]:
     profile = db.exec(select(PatientProfile).where(PatientProfile.user_id == user.id)).first()
@@ -118,6 +133,14 @@ def _patient_payload(db, user: User) -> Dict[str, Any]:
         "notes": profile.notes if profile else "",
         "doctor_id": profile.doctor_id if profile else None,
         "plan": plan.model_dump() if plan else None,
+        "review_requested": profile.review_requested if profile else False,
+        "review_requested_at": profile.review_requested_at.isoformat()
+        if profile and profile.review_requested_at
+        else None,
+        "glasses_connected": profile.glasses_connected if profile else False,
+        "glasses_name": profile.glasses_name if profile else "",
+        "watch_connected": profile.watch_connected if profile else False,
+        "watch_name": profile.watch_name if profile else "",
     }
 
 
@@ -169,6 +192,22 @@ def list_patients():
         return [_patient_payload(db, u) for u in users]
 
 
+@app.post("/api/patients/login")
+def patient_login(body: PatientLoginIn):
+    name = (body.name or "").strip().lower()
+    password = (body.password or "").strip().lower()
+    if not name or not password:
+        raise HTTPException(401, "Invalid name or password")
+    with get_session() as db:
+        users = db.exec(select(User).where(User.role == "patient")).all()
+        for u in users:
+            parts = u.name.strip().lower().split()
+            last_name = parts[-1] if parts else ""
+            if u.name.strip().lower() == name and password == last_name:
+                return _patient_payload(db, u)
+    raise HTTPException(401, "Invalid name or password")
+
+
 @app.post("/api/patients")
 def create_patient(body: PatientCreateIn):
     name = (body.name or "").strip()
@@ -216,6 +255,26 @@ def create_patient(body: PatientCreateIn):
         return _patient_payload(db, user)
 
 
+@app.put("/api/patients/{patient_id}")
+def update_patient(patient_id: str, body: PatientUpdateIn):
+    with get_session() as db:
+        user = db.get(User, patient_id)
+        if not user or user.role != "patient":
+            raise HTTPException(404, "Patient not found")
+        if body.name is not None and body.name.strip():
+            user.name = body.name.strip()
+            db.add(user)
+        if body.notes is not None:
+            profile = db.exec(
+                select(PatientProfile).where(PatientProfile.user_id == patient_id)
+            ).first()
+            if profile:
+                profile.notes = body.notes
+                db.add(profile)
+        db.commit()
+        return _patient_payload(db, user)
+
+
 @app.get("/api/patients/{patient_id}")
 def get_patient(patient_id: str):
     with get_session() as db:
@@ -240,6 +299,63 @@ def get_patient(patient_id: str):
             ).all()[:10]
         ]
         return payload
+
+
+@app.post("/api/patients/{patient_id}/request-review")
+def request_review(patient_id: str):
+    with get_session() as db:
+        profile = db.exec(
+            select(PatientProfile).where(PatientProfile.user_id == patient_id)
+        ).first()
+        if not profile:
+            raise HTTPException(404, "Patient not found")
+        profile.review_requested = True
+        profile.review_requested_at = datetime.utcnow()
+        db.add(profile)
+        db.commit()
+        user = db.get(User, patient_id)
+        return _patient_payload(db, user)
+
+
+@app.post("/api/patients/{patient_id}/clear-review")
+def clear_review(patient_id: str):
+    with get_session() as db:
+        profile = db.exec(
+            select(PatientProfile).where(PatientProfile.user_id == patient_id)
+        ).first()
+        if not profile:
+            raise HTTPException(404, "Patient not found")
+        profile.review_requested = False
+        db.add(profile)
+        db.commit()
+        user = db.get(User, patient_id)
+        return _patient_payload(db, user)
+
+
+DEFAULT_DEVICE_NAMES = {"glasses": "Ray-Ban Meta", "watch": "Apple Watch"}
+
+
+@app.post("/api/patients/{patient_id}/devices/{device}")
+def set_device(patient_id: str, device: str, body: DeviceIn):
+    if device not in ("glasses", "watch"):
+        raise HTTPException(404, "Unknown device")
+    with get_session() as db:
+        profile = db.exec(
+            select(PatientProfile).where(PatientProfile.user_id == patient_id)
+        ).first()
+        if not profile:
+            raise HTTPException(404, "Patient not found")
+        name = (body.name or "").strip() or DEFAULT_DEVICE_NAMES[device]
+        if device == "glasses":
+            profile.glasses_connected = body.connected
+            profile.glasses_name = name if body.connected else ""
+        else:
+            profile.watch_connected = body.connected
+            profile.watch_name = name if body.connected else ""
+        db.add(profile)
+        db.commit()
+        user = db.get(User, patient_id)
+        return _patient_payload(db, user)
 
 
 @app.put("/api/patients/{patient_id}/plan")
@@ -329,7 +445,14 @@ def generate_daily_plan(patient_id: str, date_str: Optional[str] = None, regener
         if existing and not regenerate:
             return existing.model_dump()
 
-        result = adapt_daily_plan(db, patient_id, d)
+        profile = db.exec(
+            select(PatientProfile).where(PatientProfile.user_id == patient_id)
+        ).first()
+        target_count = profile.daily_exercise_count if profile else None
+        feature_videos = profile.feature_video_exercises if profile else False
+        result = adapt_daily_plan(
+            db, patient_id, d, target_count=target_count, feature_videos=feature_videos
+        )
         if existing:
             existing.exercises = result["exercises"]
             existing.rationale = result["rationale"]

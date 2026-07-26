@@ -34,6 +34,12 @@ export type Patient = {
   plan: Plan | null;
   environment?: EnvironmentCapture[];
   recent_sessions?: WorkoutSession[];
+  review_requested?: boolean;
+  review_requested_at?: string | null;
+  glasses_connected?: boolean;
+  glasses_name?: string;
+  watch_connected?: boolean;
+  watch_name?: string;
 };
 
 export type EnvironmentCapture = {
@@ -65,6 +71,7 @@ export type DailyExercise = {
   reps: number;
   hold_seconds: number;
   rest_seconds: number;
+  video_url?: string;
 };
 
 export type DailyPlan = {
@@ -128,6 +135,8 @@ export type PerfIn = {
 export const api = {
   getDoctor: () => req<{ id: string; name: string }>("/api/doctor"),
   listPatients: () => req<Patient[]>("/api/patients"),
+  patientLogin: (name: string, password: string) =>
+    req<Patient>("/api/patients/login", { method: "POST", body: JSON.stringify({ name, password }) }),
   getPatient: (id: string) => req<Patient>(`/api/patients/${id}`),
   createPatient: (body: {
     name: string;
@@ -139,6 +148,9 @@ export const api = {
   }) =>
     req<Patient>("/api/patients", { method: "POST", body: JSON.stringify(body) }),
   templates: () => req<ExerciseTemplate[]>("/api/exercise-templates"),
+
+  updatePatient: (id: string, body: { name?: string; notes?: string }) =>
+    req<Patient>(`/api/patients/${id}`, { method: "PUT", body: JSON.stringify(body) }),
 
   savePlan: (id: string, body: Omit<Plan, "id" | "patient_id" | "active">) =>
     req<Plan>(`/api/patients/${id}/plan`, { method: "PUT", body: JSON.stringify(body) }),
@@ -184,5 +196,14 @@ export const api = {
     req<WeeklyReport>(`/api/weekly-reports/${reportId}/sign`, {
       method: "POST",
       body: JSON.stringify({ doctor_id, notes }),
+    }),
+
+  requestReview: (id: string) => req<Patient>(`/api/patients/${id}/request-review`, { method: "POST" }),
+  clearReview: (id: string) => req<Patient>(`/api/patients/${id}/clear-review`, { method: "POST" }),
+
+  setDevice: (id: string, device: "glasses" | "watch", connected: boolean, name?: string) =>
+    req<Patient>(`/api/patients/${id}/devices/${device}`, {
+      method: "POST",
+      body: JSON.stringify({ connected, name: name || "" }),
     }),
 };

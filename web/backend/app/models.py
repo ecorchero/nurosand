@@ -24,6 +24,14 @@ class PatientProfile(SQLModel, table=True):
     user_id: str = Field(index=True)
     doctor_id: str = Field(index=True)
     notes: str = ""
+    daily_exercise_count: Optional[int] = None
+    feature_video_exercises: bool = False
+    review_requested: bool = False
+    review_requested_at: Optional[datetime] = None
+    glasses_connected: bool = False
+    glasses_name: str = ""
+    watch_connected: bool = False
+    watch_name: str = ""
 
 
 class Plan(SQLModel, table=True):
@@ -45,6 +53,7 @@ class ExerciseTemplate(SQLModel, table=True):
     needs_props: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     cue_scripts: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     base_difficulty: int = 2  # 1..5
+    video_url: str = ""
 
 
 class EnvironmentCapture(SQLModel, table=True):

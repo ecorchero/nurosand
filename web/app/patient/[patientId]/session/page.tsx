@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Brand from "@/components/Brand";
 import { api, DailyPlan, DailyExercise, PerfIn } from "@/lib/api";
 import { speak, stopSpeaking, canSpeak, warmVoices, currentVoiceName } from "@/lib/voiceCoach";
+import { isPatientAuthed } from "@/lib/auth";
 
 type Rating = { label: string; score: number; completed: boolean };
 const RATINGS: Rating[] = [
@@ -17,6 +18,9 @@ const RATINGS: Rating[] = [
 
 export default function SessionRunner() {
   const { patientId } = useParams<{ patientId: string }>();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const reviewMode = searchParams.get("review") === "1";
   const [daily, setDaily] = useState<DailyPlan | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
@@ -38,10 +42,19 @@ export default function SessionRunner() {
   );
 
   useEffect(() => {
+    if (!isPatientAuthed(patientId)) {
+      router.replace("/patient");
+      return;
+    }
     if (startedRef.current) return;
     startedRef.current = true;
     (async () => {
       try {
+        if (reviewMode) {
+          const dp = await api.getDailyPlan(patientId);
+          setDaily(dp);
+          return;
+        }
         const voice = await warmVoices();
         setVoiceName(voice?.name ?? currentVoiceName());
         const dp = await api.generateDailyPlan(patientId, false);
@@ -53,12 +66,13 @@ export default function SessionRunner() {
       }
     })();
     return () => stopSpeaking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   const current: DailyExercise | undefined = daily?.exercises[idx];
 
   useEffect(() => {
-    if (!current) return;
+    if (!current || reviewMode) return;
     say(`Next: ${current.name}. ${current.instructions}`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, daily]);
@@ -193,11 +207,23 @@ export default function SessionRunner() {
           <span>{current.hold_seconds}s hold</span>
         </div>
 
-        {countdown !== null ? (
+        {current.video_url && (
+          <video
+            key={current.video_url}
+            className="mt-5 w-full rounded-lg border border-[var(--border)]"
+            src={current.video_url}
+            controls
+            playsInline
+            loop
+          />
+        )}
+
+        {!reviewMode && countdown !== null && (
           <div className="mt-8 text-center text-6xl font-semibold tabular-nums text-[var(--accent)]">
             {countdown}
           </div>
-        ) : (
+        )}
+        {!reviewMode && countdown === null && (
           <div className="mt-6 flex flex-wrap gap-2">
             <button className="btn-ghost" onClick={() => say(current.instructions)}>
               Repeat cue
@@ -208,7 +234,7 @@ export default function SessionRunner() {
           </div>
         )}
 
-        {current.cue_scripts.length > 0 && (
+        {!reviewMode && current.cue_scripts.length > 0 && (
           <div className="mt-5">
             <div className="label">Coaching cues</div>
             <div className="flex flex-wrap gap-2">
@@ -222,31 +248,52 @@ export default function SessionRunner() {
         )}
       </div>
 
-      <div className="mt-6">
-        <div className="label">How did that go?</div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {RATINGS.map((r) => (
-            <button
-              key={r.label}
-              className="btn-ghost"
-              onClick={() => rate(r)}
-              disabled={countdown !== null}
-            >
-              {r.label}
+      {reviewMode ? (
+        <div className="mt-6 flex items-center justify-between gap-2">
+          <button
+            className="btn-ghost"
+            onClick={() => setIdx((i) => Math.max(0, i - 1))}
+            disabled={idx === 0}
+          >
+            ← Previous
+          </button>
+          {idx + 1 < daily.exercises.length ? (
+            <button className="btn-primary" onClick={() => setIdx((i) => i + 1)}>
+              Next →
             </button>
-          ))}
+          ) : (
+            <Link href={`/patient/${patientId}`} className="btn-primary">
+              Done reviewing
+            </Link>
+          )}
         </div>
-      </div>
+      ) : (
+        <div className="mt-6">
+          <div className="label">How did that go?</div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {RATINGS.map((r) => (
+              <button
+                key={r.label}
+                className="btn-ghost"
+                onClick={() => rate(r)}
+                disabled={countdown !== null}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {!canSpeak() && (
+      {!reviewMode && !canSpeak() && (
         <div className="mt-4 text-sm text-amber-800">
           Voice not supported in this browser. On-screen cues only.
         </div>
       )}
-      {canSpeak() && voiceName && (
+      {!reviewMode && canSpeak() && voiceName && (
         <div className="mt-4 text-sm muted">Voice: {voiceName}</div>
       )}
-      {canSpeak() && !voiceName && (
+      {!reviewMode && canSpeak() && !voiceName && (
         <div className="mt-4 text-sm muted">
           Loading voice… Add ELEVENLABS_API_KEY in web/backend/.env for ElevenLabs
           (otherwise Samantha / system TTS is used).

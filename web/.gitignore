@@ -43,6 +43,9 @@ backend/**/*.db
 # vercel
 .vercel
 
+# raw exercise video sources (compressed copies live in public/videos/exercises)
+/raw-videos/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

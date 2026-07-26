@@ -13,6 +13,7 @@ from .models import (
     ExerciseTemplate,
     EnvironmentCapture,
     WellnessSample,
+    DailyPlan,
     Session as WorkoutSession,
     PerformanceSnapshot,
 )
@@ -25,6 +26,7 @@ def _t(
     props: List[str] | None = None,
     cues: List[str] | None = None,
     difficulty: int = 2,
+    video_url: str = "",
 ) -> Dict[str, Any]:
     short = name.split("–")[0].split("(")[0].strip()
     default_cues = [
@@ -39,6 +41,7 @@ def _t(
         needs_props=props or [],
         cue_scripts=cues or default_cues,
         base_difficulty=difficulty,
+        video_url=video_url,
     )
 
 
@@ -126,12 +129,14 @@ TEMPLATES: List[Dict[str, Any]] = [
     ),
     # ---------- Dexterity ----------
     _t(
-        "Draw a Circle",
+        "Line & Circle Steadiness (Both Hands)",
         "dexterity",
-        "Trace circles on paper or in the air, alternating clockwise and counterclockwise.",
+        "Draw a straight horizontal line with your right hand, then your left hand. "
+        "Then draw a circle with your right hand, then your left hand.",
         ["paper"],
-        ["Smooth circles.", "Now the other direction.", "Keep the size even."],
+        ["Straight line, right hand.", "Now the left hand.", "Circle with your right hand.", "Finish with your left hand."],
         1,
+        video_url="/videos/exercises/draw-shapes.mp4",
     ),
     _t(
         "Write Your Name (or Dog)",
@@ -257,10 +262,11 @@ TEMPLATES: List[Dict[str, Any]] = [
     _t(
         "Knee-to-Elbow Crunches",
         "strength",
-        "Standing or seated, bring opposite knee up to meet opposite elbow.",
+        "Standing or seated, bring opposite knee up to meet opposite elbow, then switch and repeat.",
         [],
         ["Opposite knee to elbow.", "Engage your core.", "Switch sides."],
         2,
+        video_url="/videos/exercises/knee-to-elbow.mp4",
     ),
     _t(
         "Grip Squeeze (stress ball)",
@@ -542,6 +548,86 @@ def sync_templates(db: Session) -> None:
     db.commit()
 
 
+def _seed_completed_today(db: Session, patient_id: str) -> None:
+    """Pre-complete today's session for the demo patient (Quentin) so the
+    patient view shows a Review state and the doctor view has fresh data."""
+    line_tpl = db.exec(
+        select(ExerciseTemplate).where(ExerciseTemplate.name == "Line & Circle Steadiness (Both Hands)")
+    ).first()
+    knee_tpl = db.exec(
+        select(ExerciseTemplate).where(ExerciseTemplate.name == "Knee-to-Elbow Crunches")
+    ).first()
+    if not line_tpl or not knee_tpl:
+        return
+
+    exercises = []
+    for t in (line_tpl, knee_tpl):
+        exercises.append(
+            {
+                "template_id": t.id,
+                "name": t.name,
+                "focus_tag": t.focus_tags[0] if t.focus_tags else "general",
+                "instructions": t.instructions,
+                "needs_props": t.needs_props,
+                "cue_scripts": t.cue_scripts,
+                "difficulty": 2,
+                "reps": 10,
+                "hold_seconds": 20,
+                "rest_seconds": 20,
+                "video_url": t.video_url,
+            }
+        )
+
+    dp = DailyPlan(
+        patient_id=patient_id,
+        date=date.today().isoformat(),
+        exercises=exercises,
+        rationale="Today's plan: line/circle steadiness and knee-to-elbow strength.",
+    )
+    db.add(dp)
+    db.commit()
+    db.refresh(dp)
+
+    sess = WorkoutSession(
+        daily_plan_id=dp.id,
+        patient_id=patient_id,
+        started_at=datetime.utcnow() - timedelta(minutes=20),
+        completed_at=datetime.utcnow() - timedelta(minutes=5),
+        spoken_cues=["Great work today."],
+        feedback={"avg_score": 0.7},
+    )
+    db.add(sess)
+    db.commit()
+    db.refresh(sess)
+
+    db.add(
+        PerformanceSnapshot(
+            session_id=sess.id,
+            patient_id=patient_id,
+            exercise_id=line_tpl.id,
+            exercise_name=line_tpl.name,
+            focus_tag="dexterity",
+            completed=True,
+            score=0.55,
+            difficulty=2,
+            notes="Left hand: line/circle unsteady, not continuous.",
+        )
+    )
+    db.add(
+        PerformanceSnapshot(
+            session_id=sess.id,
+            patient_id=patient_id,
+            exercise_id=knee_tpl.id,
+            exercise_name=knee_tpl.name,
+            focus_tag="strength",
+            completed=True,
+            score=0.85,
+            difficulty=2,
+        )
+    )
+    db.commit()
+
+
 def seed(force: bool = False) -> None:
     init_db()
     with Session(engine) as db:
@@ -558,8 +644,19 @@ def seed(force: bool = False) -> None:
         db.refresh(doctor)
 
         patients_spec = [
-            ("Alex Morgan", ["balance", "dexterity"], "Post-stroke rehab, focus on balance."),
-            ("Sam Rivera", ["strength", "mobility", "proprioception"], "Knee recovery, build strength gradually."),
+            ("Alex Morgan", ["balance", "dexterity"], "Post-stroke rehab, focus on balance.", None),
+            (
+                "Sam Rivera",
+                ["strength", "mobility", "proprioception"],
+                "Knee recovery, build strength gradually.",
+                None,
+            ),
+            (
+                "Quentin Tarantino",
+                ["dexterity", "strength"],
+                "Demo patient — plan covers both video-guided exercises.",
+                2,
+            ),
         ]
 
         home_props = [
@@ -575,12 +672,21 @@ def seed(force: bool = False) -> None:
             "step",
         ]
 
-        for name, focus, notes in patients_spec:
+        for name, focus, notes, daily_exercise_count in patients_spec:
             u = User(role="patient", name=name)
             db.add(u)
             db.commit()
             db.refresh(u)
-            profile = PatientProfile(user_id=u.id, doctor_id=doctor.id, notes=notes)
+            profile = PatientProfile(
+                user_id=u.id,
+                doctor_id=doctor.id,
+                notes=notes,
+                daily_exercise_count=daily_exercise_count,
+            )
+            if name == "Quentin Tarantino":
+                profile.glasses_connected = True
+                profile.glasses_name = "Ray-Ban Meta"
+                profile.feature_video_exercises = True
             db.add(profile)
             plan = Plan(
                 patient_id=u.id,
@@ -633,6 +739,9 @@ def seed(force: bool = False) -> None:
                         )
                     )
                 db.commit()
+
+            if name == "Quentin Tarantino":
+                _seed_completed_today(db, u.id)
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ from .models import (
     WeeklyReport,
 )
 
-TARGET_COUNT = 4
+DEFAULT_TARGET_COUNT = 4
 
 
 def _recent_perf_by_focus(db: Session, patient_id: str, days: int = 7) -> Dict[str, float]:
@@ -59,7 +59,14 @@ def _env_tags(db: Session, patient_id: str) -> List[str]:
     return list(cap.tags) if cap else []
 
 
-def adapt_daily_plan(db: Session, patient_id: str, target_date: str) -> Dict[str, Any]:
+def adapt_daily_plan(
+    db: Session,
+    patient_id: str,
+    target_date: str,
+    target_count: Optional[int] = None,
+    feature_videos: bool = False,
+) -> Dict[str, Any]:
+    TARGET_COUNT = target_count or DEFAULT_TARGET_COUNT
     plan = db.exec(
         select(Plan).where(Plan.patient_id == patient_id, Plan.active == True)  # noqa: E712
     ).first()
@@ -109,6 +116,34 @@ def adapt_daily_plan(db: Session, patient_id: str, target_date: str) -> Dict[str
     def props_ok(t: ExerciseTemplate) -> bool:
         return all(p in env for p in t.needs_props) if t.needs_props else True
 
+    # Feature any exercise with a demo video so it's guaranteed to show up,
+    # regardless of the patient's focus tags or environment props. Only
+    # enabled for patients explicitly flagged for the video demo.
+    if feature_videos:
+        for t in templates:
+            if len(chosen) >= TARGET_COUNT:
+                break
+            if not t.video_url or t.id in used_templates:
+                continue
+            used_templates.add(t.id)
+            tag = t.focus_tags[0] if t.focus_tags else "general"
+            difficulty = max(1, min(5, t.base_difficulty + intensity))
+            chosen.append(
+                {
+                    "template_id": t.id,
+                    "name": t.name,
+                    "focus_tag": tag,
+                    "instructions": t.instructions,
+                    "needs_props": t.needs_props,
+                    "cue_scripts": t.cue_scripts,
+                    "difficulty": difficulty,
+                    "reps": 6 + difficulty * 2,
+                    "hold_seconds": 10 + difficulty * 5,
+                    "rest_seconds": 20,
+                    "video_url": t.video_url,
+                }
+            )
+
     for tag in ordered_focus:
         if len(chosen) >= TARGET_COUNT:
             break
@@ -157,6 +192,7 @@ def adapt_daily_plan(db: Session, patient_id: str, target_date: str) -> Dict[str
                 "reps": reps,
                 "hold_seconds": hold_seconds,
                 "rest_seconds": rest_seconds,
+                "video_url": t.video_url if feature_videos else "",
             }
         )
 
@@ -183,6 +219,7 @@ def adapt_daily_plan(db: Session, patient_id: str, target_date: str) -> Dict[str
                     "reps": 6 + difficulty * 2,
                     "hold_seconds": 10 + difficulty * 5,
                     "rest_seconds": 20,
+                    "video_url": t.video_url if feature_videos else "",
                 }
             )
 

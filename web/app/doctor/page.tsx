@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import { api, Patient } from "@/lib/api";
+import { DOCTOR_PASSWORD, clearDoctorAuthed, isDoctorAuthed, setDoctorAuthed } from "@/lib/auth";
 
 const FOCUS_OPTIONS = ["balance", "dexterity", "strength", "mobility", "memory", "proprioception"];
 
 export default function DoctorHome() {
   const router = useRouter();
+  const [authed, setAuthed] = useState(false);
+  const [checkedAuth, setCheckedAuth] = useState(false);
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctor, setDoctor] = useState<{ id: string; name: string } | null>(null);
   const [error, setError] = useState<string>("");
@@ -31,8 +37,29 @@ export default function DoctorHome() {
   }
 
   useEffect(() => {
-    load();
+    const ok = isDoctorAuthed();
+    setAuthed(ok);
+    setCheckedAuth(true);
+    if (ok) load();
   }, []);
+
+  function submitPassword(e: FormEvent) {
+    e.preventDefault();
+    if (password.trim().toLowerCase() === DOCTOR_PASSWORD) {
+      setDoctorAuthed();
+      setAuthed(true);
+      setAuthError("");
+      load();
+    } else {
+      setAuthError("Incorrect password.");
+    }
+  }
+
+  function logOut() {
+    clearDoctorAuthed();
+    setAuthed(false);
+    setPassword("");
+  }
 
   function toggleFocus(tag: string) {
     setFocus((f) => (f.includes(tag) ? f.filter((x) => x !== tag) : [...f, tag]));
@@ -65,13 +92,54 @@ export default function DoctorHome() {
     }
   }
 
+  if (!checkedAuth) {
+    return <main className="shell muted">Loading…</main>;
+  }
+
+  if (!authed) {
+    return (
+      <main className="shell">
+        <div className="topbar">
+          <Brand size={28} />
+          <Link href="/" className="nav-back">
+            Home
+          </Link>
+        </div>
+
+        <h1 className="page-title">Clinician sign-in</h1>
+        <p className="mt-2 muted">Enter the clinician password to view patients.</p>
+
+        <form onSubmit={submitPassword} className="card mt-8 max-w-sm">
+          <div className="label">Password</div>
+          <input
+            type="password"
+            autoFocus
+            className="input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+          />
+          {authError && <div className="alert-error mt-3">{authError}</div>}
+          <button type="submit" className="btn-primary mt-4">
+            Sign in
+          </button>
+        </form>
+      </main>
+    );
+  }
+
   return (
     <main className="shell">
       <div className="topbar">
         <Brand size={28} />
-        <Link href="/" className="nav-back">
-          Home
-        </Link>
+        <div className="flex items-center gap-4">
+          <button className="nav-back" onClick={logOut}>
+            Log out
+          </button>
+          <Link href="/" className="nav-back">
+            Home
+          </Link>
+        </div>
       </div>
 
       <div className="flex items-start justify-between gap-3">

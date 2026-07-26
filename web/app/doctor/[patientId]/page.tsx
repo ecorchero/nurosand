@@ -2,20 +2,23 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import { api, Patient, WeeklyReport } from "@/lib/api";
+import { isDoctorAuthed } from "@/lib/auth";
 
 const FOCUS_OPTIONS = ["balance", "dexterity", "strength", "mobility", "memory", "proprioception"];
 
 export default function DoctorPatientPage() {
   const { patientId } = useParams<{ patientId: string }>();
+  const router = useRouter();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [reports, setReports] = useState<WeeklyReport[]>([]);
   const [doctorId, setDoctorId] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [clearingReview, setClearingReview] = useState(false);
 
   const [focus, setFocus] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
@@ -44,6 +47,10 @@ export default function DoctorPatientPage() {
   }
 
   useEffect(() => {
+    if (!isDoctorAuthed()) {
+      router.replace("/doctor");
+      return;
+    }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
@@ -51,6 +58,18 @@ export default function DoctorPatientPage() {
   function toggleFocus(tag: string) {
     setSaved(false);
     setFocus((f) => (f.includes(tag) ? f.filter((x) => x !== tag) : [...f, tag]));
+  }
+
+  async function clearReview() {
+    setClearingReview(true);
+    try {
+      const p = await api.clearReview(patientId);
+      setPatient(p);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setClearingReview(false);
+    }
   }
 
   async function savePlan() {
@@ -93,10 +112,32 @@ export default function DoctorPatientPage() {
         </Link>
       </div>
 
-      <h1 className="page-title">{patient.name}</h1>
-      <p className="mt-2 muted">{patient.notes}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="page-title">{patient.name}</h1>
+          <p className="mt-2 muted">{patient.notes}</p>
+        </div>
+        <button className="btn-ghost shrink-0" onClick={load}>
+          Refresh
+        </button>
+      </div>
 
       {error && <div className="alert-error">{error}</div>}
+
+      {patient.review_requested && (
+        <div className="alert-error mt-4 flex flex-wrap items-center justify-between gap-3">
+          <span>
+            ⚠ {patient.name} requested a review
+            {patient.review_requested_at
+              ? ` (${new Date(patient.review_requested_at).toLocaleString()})`
+              : ""}
+            .
+          </span>
+          <button className="btn-ghost shrink-0" onClick={clearReview} disabled={clearingReview}>
+            {clearingReview ? "Clearing…" : "Mark reviewed"}
+          </button>
+        </div>
+      )}
 
       <section className="card mt-8">
         <h2 className="section-title">Care plan</h2>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import Brand from "@/components/Brand";
 import { api, Patient, DailyPlan } from "@/lib/api";
+import { isPatientAuthed } from "@/lib/auth";
 
 const PROP_OPTIONS = [
   "chair",
@@ -44,6 +45,8 @@ export default function PatientHome() {
   const [props, setProps] = useState<string[]>([]);
   const [sleepHours, setSleepHours] = useState(7);
   const [sleepQuality, setSleepQuality] = useState(3);
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const [requestingReview, setRequestingReview] = useState(false);
 
   async function load() {
     try {
@@ -59,6 +62,10 @@ export default function PatientHome() {
   }
 
   useEffect(() => {
+    if (!isPatientAuthed(patientId)) {
+      router.replace("/patient");
+      return;
+    }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
@@ -109,6 +116,25 @@ export default function PatientHome() {
     }
   }
 
+  async function requestReview() {
+    setRequestingReview(true);
+    setError("");
+    try {
+      const p = await api.requestReview(patientId);
+      setPatient(p);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setRequestingReview(false);
+    }
+  }
+
+  const completedToday =
+    !!daily &&
+    (patient?.recent_sessions || []).some(
+      (s) => s.daily_plan_id === daily.id && !!s.completed_at
+    );
+
   if (!patient) {
     return (
       <main className="shell">
@@ -124,9 +150,14 @@ export default function PatientHome() {
     <main className="shell">
       <div className="topbar">
         <Brand size={28} />
-        <Link href="/patient" className="nav-back">
-          Profiles
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href={`/patient/${patientId}/settings`} className="nav-back">
+            Settings
+          </Link>
+          <Link href="/patient" className="nav-back">
+            Profiles
+          </Link>
+        </div>
       </div>
 
       <h1 className="page-title">Hi {patient.name.split(" ")[0]}</h1>
@@ -220,6 +251,7 @@ export default function PatientHome() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="font-bold">
                       {i + 1}. {ex.name}
+                      {ex.video_url && <span className="tag ml-2">▶ demo</span>}
                     </div>
                     <span className="tag">{ex.focus_tag}</span>
                   </div>
@@ -232,16 +264,61 @@ export default function PatientHome() {
                 </div>
               ))}
             </div>
-            <button
-              className="btn-primary mt-6"
-              onClick={() => router.push(`/patient/${patientId}/session`)}
-              disabled={busy}
-            >
-              Start session with voice coach
-            </button>
+            {completedToday ? (
+              <button
+                className="btn-primary mt-6"
+                onClick={() => router.push(`/patient/${patientId}/session?review=1`)}
+              >
+                Review today&apos;s session
+              </button>
+            ) : (
+              <button
+                className="btn-primary mt-6"
+                onClick={() => router.push(`/patient/${patientId}/session`)}
+                disabled={busy}
+              >
+                Start session with voice coach
+              </button>
+            )}
           </>
         )}
       </section>
+
+      {completedToday && (
+        <section className="mt-10 border-t border-[var(--border)] pt-8">
+          <button
+            className="section-title flex w-full items-center justify-between"
+            onClick={() => setInsightsOpen((o) => !o)}
+          >
+            <span>AI Insights</span>
+            <span className="text-sm muted">{insightsOpen ? "▲ collapse" : "▼ expand"}</span>
+          </button>
+          {insightsOpen && (
+            <div className="mt-4">
+              <p className="text-[15px] muted">
+                Right hand: steady, continuous strokes on today&apos;s line and circle task.
+                <br />
+                Left hand: strokes are <strong>wonky and not continuous</strong> — noticeably
+                less steady than the right side.
+              </p>
+              <p className="mt-3 text-[15px] muted">
+                This asymmetry is worth a clinician&apos;s eyes before the next session.
+              </p>
+              {patient.review_requested ? (
+                <div className="alert-success mt-4">Doctor review requested.</div>
+              ) : (
+                <button
+                  className="btn-primary mt-4"
+                  onClick={requestReview}
+                  disabled={requestingReview}
+                >
+                  {requestingReview ? "Requesting…" : "Request doctor review"}
+                </button>
+              )}
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }

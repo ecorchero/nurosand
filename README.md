@@ -92,6 +92,24 @@ npm run dev
 
 Open http://localhost:3000. On first run the backend seeds a demo doctor, patients and exercise library into `web/backend/nurosand.db` (delete that file to reset).
 
+### Demo logins
+
+These are demo-only credentials (not real auth).
+
+| Role | How to sign in |
+|------|----------------|
+| **Clinician** | Go to `/doctor` → password: `doc` |
+| **Patient** | Go to `/patient` → **full name** + password = **last name** (lowercase) |
+
+Examples:
+
+| Full name | Password |
+|-----------|----------|
+| Quentin Tarantino | `tarantino` |
+| Lucy Williams | `williams` |
+| Alex Morgan | `morgan` |
+| Sam Rivera | `rivera` |
+
 Try it: open **/doctor** to set a plan and sign a report, or **/patient** to run a voice-guided session and view the Nuroport.
 
 See [`web/README.md`](web/README.md) for backend deploy notes, ElevenLabs setup, and the full flow.

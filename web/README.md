@@ -61,6 +61,13 @@ npm run dev
 
 ## Try the flow
 
+### Demo logins
+
+| Role | Credentials |
+|------|-------------|
+| Clinician (`/doctor`) | password: `doc` |
+| Patient (`/patient`) | full name + last name as password (e.g. `Quentin Tarantino` / `tarantino`, `Lucy Williams` / `williams`) |
+
 1. **Doctor** (`/doctor`): pick a patient, set focus areas / notes, save the plan. Review the
    weekly report (sessions, adherence, per-focus progress, sleep) and **Sign off** with notes.
 2. **Patient** (`/patient`): pick a patient, tick environment props, log last night's sleep, then

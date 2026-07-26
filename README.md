@@ -23,6 +23,8 @@ Adaptive daily exercises, hands-free voice coaching, and weekly clinician sign-o
 
 In the web demo, wearable connection and environment scan are simulated / UI-complete so the product story is clear. The Watch and Ray-Ban repos below are the real hardware pipelines ready to connect next.
 
+**AI vs hardcoded (demo honesty):** the product direction is for **AI** to power form analysis, Nuroport reporting, live coaching cues, and environment-scan understanding. In this build those pieces are **hardcoded / scripted** so the full closed-loop UX can be demoed end-to-end without live models. The UI, data flow, and clinician sign-off path are real; the “intelligence” layer is stubbed for the hackathon.
+
 ## What it does
 
 Nurosand turns neuro-rehab into a **closed feedback loop** between the patient at home and their clinician:
@@ -44,9 +46,9 @@ session performance + sleep ─▶ daily adapter ─▶ voice-guided session
 
 - **Clinician dashboard** — caseload overview, per-patient weekly improvement charts, alerts, and one-tap report sign-off.
 - **Patient app** — today's session, wearable data panel, environment scan flow, and a post-session **Nuroport** with video form clips and per-clip feedback.
-- **Hands-free coaching** — say "go" to start; the coach walks you through every rep with simulated real-time cues ("stay steady", "that's 1, 2, great job").
+- **Hands-free coaching** — say "go" to start; the coach walks you through every rep with live-style cues (scripted for demo; intended to be AI-driven from form/video).
 - **Voice** — high-quality ElevenLabs TTS when configured, with a graceful browser/Samantha fallback.
-
+- **Nuroport & space scan** — post-session report and environment scan flows are in product; analysis content is hardcoded today, AI next.
 ## Tech stack
 
 | Layer | Stack |
@@ -122,5 +124,5 @@ The vendored SDK is cloned separately (git-ignored here). See [`ios-rayban/READM
 ---
 
 <div align="center">
-Built for a hackathon. The closed-loop web flow is the main demo; Watch and Ray-Ban are proven pipelines ready to plug in.
+Built for a hackathon. Closed-loop UX is the main demo; Watch / Ray-Ban are proven pipelines; analysis, Nuroport, and scan intelligence are hardcoded stand-ins for the AI layer.
 </div>

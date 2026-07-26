@@ -1,0 +1,313 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f4f5f7;
+  --foreground: #1c1c1a;
+  --muted: #6b6a66;
+  --border: #e4e3de;
+  --surface: #ffffff;
+  --accent: #1f6b63;
+  --accent-soft: #eef6f4;
+  --accent-hover: #18574f;
+  --danger: #9b2c2c;
+  --danger-soft: #fdf2f2;
+  --success: #276749;
+  --success-soft: #f0fff4;
+  --track: #e8e7e2;
+  --ink: #111;
+  --blue: #3b82f6;
+  --purple: #7c6cf0;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  min-height: 100vh;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 17px;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+}
+
+.shell {
+  @apply mx-auto w-full max-w-2xl px-5 py-8 sm:px-8 sm:py-12;
+}
+
+/* Patient + clinician detail flows: roomier on tablet/desktop */
+.shell-patient {
+  @apply max-w-3xl lg:max-w-5xl lg:px-10;
+}
+
+.shell-wide {
+  @apply max-w-3xl lg:max-w-4xl lg:px-10;
+}
+
+.patient-grid {
+  @apply mt-10 grid gap-10 border-t border-[var(--border)] pt-8 lg:grid-cols-12 lg:gap-12;
+}
+
+.patient-grid-aside {
+  @apply lg:col-span-4;
+}
+
+.patient-grid-main {
+  @apply lg:col-span-8;
+}
+
+.topbar {
+  @apply mb-10 flex items-center justify-between;
+}
+
+.card {
+  @apply rounded-md border bg-white p-5;
+  border-color: var(--border);
+}
+
+.card-soft {
+  @apply rounded-md border p-4;
+  border-color: var(--border);
+  background: var(--accent-soft);
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded px-4 py-2.5 text-[15px] font-bold transition disabled:opacity-40;
+}
+.btn-primary {
+  @apply btn text-white;
+  background: var(--accent);
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+.btn-ghost {
+  @apply btn border bg-white font-normal;
+  border-color: var(--border);
+  color: var(--foreground);
+}
+.btn-ghost:hover {
+  background: var(--background);
+}
+.tag {
+  @apply inline-flex items-center rounded border px-2 py-0.5 text-sm capitalize;
+  border-color: var(--border);
+  background: var(--background);
+  color: var(--muted);
+}
+.tag-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.input {
+  @apply w-full rounded border bg-white px-3 py-2.5 outline-none;
+  border-color: var(--border);
+  color: var(--foreground);
+  font-size: 16px;
+}
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(31, 107, 99, 0.18);
+}
+.label {
+  @apply mb-1.5 block text-sm;
+  color: var(--muted);
+}
+.muted {
+  color: var(--muted);
+}
+.nav-back {
+  @apply text-sm;
+  color: var(--muted);
+}
+.nav-back:hover {
+  color: var(--foreground);
+}
+.btn-nav {
+  @apply inline-flex items-center justify-center rounded border bg-white px-3 py-1.5 text-sm font-medium transition;
+  border-color: var(--border);
+  color: var(--foreground);
+  text-decoration: none;
+}
+.btn-nav:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.page-title {
+  margin-top: 0.35rem;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(1.85rem, 4vw, 2.35rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+.section-title {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.alert-error {
+  @apply card mt-6;
+  border-color: #f0c2c2;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.alert-success {
+  @apply mt-3 rounded border px-3 py-2 text-sm;
+  border-color: #9ae6b4;
+  background: var(--success-soft);
+  color: var(--success);
+}
+.metric {
+  @apply rounded border p-3;
+  border-color: var(--border);
+  background: var(--background);
+}
+.progress-track {
+  @apply h-1.5 overflow-hidden rounded-sm;
+  background: var(--track);
+}
+.progress-fill {
+  @apply h-full rounded-sm transition-all;
+  background: var(--accent);
+}
+.badge-draft {
+  @apply tag;
+}
+.badge-signed {
+  @apply tag;
+  border-color: #9ae6b4;
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.role-link {
+  display: block;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: inherit;
+}
+.role-link:first-of-type {
+  border-top: 1px solid var(--border);
+}
+.role-link:hover .role-link-title {
+  color: var(--accent);
+}
+.role-link-title {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* —— Dashboard layouts (patient Today + doctor Overview) —— */
+.dash-card {
+  @apply rounded-2xl border bg-white p-4 sm:p-5;
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(28, 28, 26, 0.04);
+}
+
+.dash-doctor {
+  @apply flex min-h-screen bg-[var(--background)];
+}
+
+.dash-sidebar {
+  @apply sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r bg-[#fafaf8] lg:flex;
+  border-color: var(--border);
+}
+
+.dash-nav-item {
+  @apply flex items-center rounded-lg px-3 py-2 text-[14px] text-[var(--muted)] transition;
+  text-decoration: none;
+}
+.dash-nav-item:hover {
+  background: rgba(31, 107, 99, 0.08);
+  color: var(--foreground);
+}
+.dash-nav-item.active {
+  background: white;
+  color: var(--foreground);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.dash-badge {
+  @apply inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold text-white;
+  background: var(--danger);
+}
+
+.dash-main {
+  @apply min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8;
+}
+
+.dash-metric {
+  @apply dash-card flex flex-col gap-2;
+}
+
+.dash-metric-label {
+  @apply text-[13px] muted;
+}
+
+.dash-metric-value {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.dash-delta-up {
+  @apply text-[12px] font-medium;
+  color: var(--success);
+}
+
+.btn-ink {
+  @apply btn text-white;
+  background: var(--ink);
+}
+.btn-ink:hover {
+  background: #2a2a28;
+}
+
+.patient-today {
+  @apply mx-auto min-h-screen w-full max-w-lg px-4 pb-28 pt-5 sm:px-6;
+}
+
+.patient-tabbar {
+  @apply fixed inset-x-0 bottom-0 z-20 border-t bg-white/95 backdrop-blur;
+  border-color: var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.patient-tabbar-inner {
+  @apply mx-auto flex max-w-lg items-stretch justify-between px-2 py-2;
+}
+
+.patient-tab {
+  @apply flex flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[11px] muted transition;
+  text-decoration: none;
+}
+.patient-tab.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.week-chart {
+  @apply relative h-44 w-full;
+}

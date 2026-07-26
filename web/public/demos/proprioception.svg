@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-label="Proprioception demo">
+  <rect width="320" height="220" fill="#eef6f4"/>
+  <text x="160" y="28" text-anchor="middle" fill="#1f6b63" font-family="Georgia, serif" font-size="14">Proprioception</text>
+  <g transform="translate(160 125)">
+    <ellipse cx="0" cy="55" rx="50" ry="9" fill="#c5ddd8"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="-5;5;-5" dur="2.6s" repeatCount="indefinite"/>
+      <circle cx="0" cy="-70" r="12" fill="#1c1c1a"/>
+      <line x1="-8" y1="-72" x2="-18" y2="-72" stroke="#1c1c1a" stroke-width="3" stroke-linecap="round"/>
+      <line x1="8" y1="-72" x2="18" y2="-72" stroke="#1c1c1a" stroke-width="3" stroke-linecap="round"/>
+      <line x1="0" y1="-58" x2="0" y2="-12" stroke="#1c1c1a" stroke-width="6" stroke-linecap="round"/>
+      <line x1="0" y1="-42" x2="-26" y2="-22" stroke="#1c1c1a" stroke-width="5" stroke-linecap="round"/>
+      <line x1="0" y1="-42" x2="26" y2="-22" stroke="#1c1c1a" stroke-width="5" stroke-linecap="round"/>
+      <line x1="0" y1="-12" x2="-16" y2="40" stroke="#1c1c1a" stroke-width="6" stroke-linecap="round"/>
+      <line x1="0" y1="-12" x2="18" y2="40" stroke="#1c1c1a" stroke-width="6" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="160" y="208" text-anchor="middle" fill="#5f5e5a" font-family="Georgia, serif" font-size="12">Eyes soft · feel your feet</text>
+</svg>

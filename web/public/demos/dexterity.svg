@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-label="Dexterity demo">
+  <rect width="320" height="220" fill="#eef6f4"/>
+  <text x="160" y="28" text-anchor="middle" fill="#1f6b63" font-family="Georgia, serif" font-size="14">Dexterity</text>
+  <rect x="70" y="55" width="180" height="120" rx="8" fill="#fff" stroke="#dddcd6"/>
+  <path d="M95 140 C120 90, 150 90, 175 140" fill="none" stroke="#1f6b63" stroke-width="4" stroke-linecap="round" stroke-dasharray="160">
+    <animate attributeName="stroke-dashoffset" values="160;0;160" dur="2.8s" repeatCount="indefinite"/>
+  </path>
+  <circle r="7" fill="#1c1c1a">
+    <animateMotion dur="2.8s" repeatCount="indefinite" path="M95 140 C120 90, 150 90, 175 140"/>
+  </circle>
+  <text x="160" y="208" text-anchor="middle" fill="#5f5e5a" font-family="Georgia, serif" font-size="12">Smooth controlled shapes</text>
+</svg>

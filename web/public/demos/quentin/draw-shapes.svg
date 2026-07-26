@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 240" role="img" aria-label="Draw line and circle demo">
+  <rect width="360" height="240" fill="#f7f7f5"/>
+  <text x="180" y="28" text-anchor="middle" fill="#1f6b63" font-family="Georgia, serif" font-size="15">Line &amp; Circle</text>
+  <rect x="40" y="48" width="280" height="150" rx="10" fill="#fff" stroke="#dddcd6"/>
+  <!-- line draw -->
+  <line x1="70" y1="100" x2="290" y2="100" stroke="#1f6b63" stroke-width="4" stroke-linecap="round" stroke-dasharray="220">
+    <animate attributeName="stroke-dashoffset" values="220;0;0;220" keyTimes="0;0.35;0.55;1" dur="4s" repeatCount="indefinite"/>
+  </line>
+  <!-- circle draw -->
+  <circle cx="180" cy="155" r="32" fill="none" stroke="#1c1c1a" stroke-width="4" stroke-dasharray="201" stroke-linecap="round">
+    <animate attributeName="stroke-dashoffset" values="201;201;0;0" keyTimes="0;0.4;0.75;1" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <circle r="6" fill="#1f6b63">
+    <animateMotion dur="4s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;0.4;0.75;1" calcMode="linear" path="M212 155 A32 32 0 1 1 148 155 A32 32 0 1 1 212 155"/>
+  </circle>
+  <text x="180" y="228" text-anchor="middle" fill="#5f5e5a" font-family="Georgia, serif" font-size="12">Right hand · left hand · steady strokes</text>
+</svg>

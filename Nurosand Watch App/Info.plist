@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Nurosand reads your heart rate so it can stream BPM to your live graph.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Nurosand records a workout session while streaming live heart rate.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Nurosand sends heart rate and motion (IMU) samples to the receiver on your Mac over the local network.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Nurosand reads accelerometer and gyroscope data during exercise to stream live IMU to your graph.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>workout-processing</string>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,1 @@
+# No third-party packages required — receiver.py uses the Python standard library only.

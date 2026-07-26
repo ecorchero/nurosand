@@ -87,4 +87,5 @@ On iPhone, pairing Ray-Ban glasses as the phone's Bluetooth audio output plays c
 
 ## Notes
 
-- Apple Watch HR/IMU and real HealthKit sleep are Phase 2; Ray-Ban camera/CV is Phase 3.
+- This folder is the **main hackathon deliverable**: closed-loop doctor ↔ patient web flow.
+- Apple Watch HR/IMU streaming and Meta Ray-Ban camera are **working pipelines elsewhere in the repo** (`Nurosand Watch App/`, `server/`, `ios-rayban/`) but are **not yet wired into this web app**. Wearable connection and environment scan in the UI are demoed / simulated for now. See the root [`README.md`](../README.md) for status and next steps.
